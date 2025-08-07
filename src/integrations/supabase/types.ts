@@ -14,13 +14,169 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          balance: number | null
+          created_at: string
+          id: string
+          profile_image_url: string | null
+          referral_code: string
+          referred_by: string | null
+          total_earnings: number | null
+          total_referrals: number | null
+          twitter_name: string | null
+          twitter_username: string | null
+          updated_at: string
+          user_id: string
+          wallet_address: string
+        }
+        Insert: {
+          balance?: number | null
+          created_at?: string
+          id?: string
+          profile_image_url?: string | null
+          referral_code: string
+          referred_by?: string | null
+          total_earnings?: number | null
+          total_referrals?: number | null
+          twitter_name?: string | null
+          twitter_username?: string | null
+          updated_at?: string
+          user_id: string
+          wallet_address: string
+        }
+        Update: {
+          balance?: number | null
+          created_at?: string
+          id?: string
+          profile_image_url?: string | null
+          referral_code?: string
+          referred_by?: string | null
+          total_earnings?: number | null
+          total_referrals?: number | null
+          twitter_name?: string | null
+          twitter_username?: string | null
+          updated_at?: string
+          user_id?: string
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_levels: {
+        Row: {
+          created_at: string
+          id: string
+          level: number
+          profile_id: string
+          referrer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level: number
+          profile_id: string
+          referrer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level?: number
+          profile_id?: string
+          referrer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_levels_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_levels_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          from_profile_id: string | null
+          id: string
+          status: string
+          to_profile_id: string | null
+          transaction_type: string
+          tx_hash: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          from_profile_id?: string | null
+          id?: string
+          status?: string
+          to_profile_id?: string | null
+          transaction_type: string
+          tx_hash?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          from_profile_id?: string | null
+          id?: string
+          status?: string
+          to_profile_id?: string | null
+          transaction_type?: string
+          tx_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_from_profile_id_fkey"
+            columns: ["from_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_to_profile_id_fkey"
+            columns: ["to_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_referral_code: {
+        Args: { wallet_addr: string }
+        Returns: string
+      }
+      handle_user_registration: {
+        Args: {
+          p_user_id: string
+          p_wallet_address: string
+          p_twitter_username?: string
+          p_twitter_name?: string
+          p_profile_image_url?: string
+          p_referral_code?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
