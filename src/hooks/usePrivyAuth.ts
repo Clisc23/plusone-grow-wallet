@@ -22,6 +22,7 @@ interface Wallet {
 const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
 
 export const usePrivyAuth = () => {
+  console.log("usePrivyAuth hook called");
   const { ready, authenticated, user, login, logout } = usePrivy();
   const { wallets } = useWallets();
   const [isLoading, setIsLoading] = useState(false);
