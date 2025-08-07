@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     nodePolyfills({
-      include: ['events', 'buffer', 'crypto', 'stream', 'util'],
+      include: ['events', 'buffer', 'crypto', 'stream', 'util', 'url', 'http', 'https', 'zlib'],
       globals: {
         Buffer: true,
         global: true,
@@ -32,7 +32,16 @@ export default defineConfig(({ mode }) => ({
     global: 'globalThis',
   },
   optimizeDeps: {
+    include: ['bn.js', 'events', 'crypto-js'],
     exclude: ['@web3auth/ethereum-provider'],
-    include: ['events'],
+    esbuildOptions: {
+      target: 'esnext',
+    },
+  },
+  build: {
+    target: 'esnext',
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   },
 }));
