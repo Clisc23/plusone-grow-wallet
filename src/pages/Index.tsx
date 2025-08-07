@@ -5,6 +5,7 @@ import { WalletBalance } from "@/components/wallet/WalletBalance";
 import { ReferralCard } from "@/components/referral/ReferralCard";
 import { TransactionHistory } from "@/components/transactions/TransactionHistory";
 import { usePrivyAuth } from "@/hooks/usePrivyAuth";
+import { useTransactions } from "@/hooks/useTransactions";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
@@ -12,27 +13,15 @@ const Index = () => {
     isAuthenticated, 
     user, 
     wallet, 
+    dbProfile,
     isLoading, 
     login, 
     logout 
   } = usePrivyAuth();
+  const { transactions } = useTransactions();
   const { toast } = useToast();
   
-  const [userProfile, setUserProfile] = useState({
-    balance: 10, // Welcome bonus
-    referralCode: "PLUS123",
-    totalReferrals: 0,
-    totalEarnings: 0,
-    currentLevel: 1
-  });
-
-  // Generate referral code based on wallet address
-  useEffect(() => {
-    if (wallet?.address) {
-      const code = wallet.address.slice(-6).toUpperCase();
-      setUserProfile(prev => ({ ...prev, referralCode: code }));
-    }
-  }, [wallet]);
+  // Remove the hardcoded userProfile state since we're using real data from the database
 
   const handleSend = () => {
     toast({
@@ -68,20 +57,20 @@ const Index = () => {
       />
       
       <WalletBalance 
-        balance={wallet?.balance || 0}
+        balance={dbProfile?.balance || 0}
         onSend={handleSend}
         onReceive={handleReceive}
         onAddFunds={handleAddFunds}
       />
       
       <ReferralCard 
-        referralCode={userProfile.referralCode}
-        totalReferrals={userProfile.totalReferrals}
-        totalEarnings={userProfile.totalEarnings}
-        currentLevel={userProfile.currentLevel}
+        referralCode={dbProfile?.referral_code || "LOADING..."}
+        totalReferrals={dbProfile?.total_referrals || 0}
+        totalEarnings={dbProfile?.total_earnings || 0}
+        currentLevel={Math.min(Math.floor((dbProfile?.total_referrals || 0) / 5) + 1, 5)}
       />
       
-      <TransactionHistory />
+      <TransactionHistory transactions={transactions} />
       
       <div className="pb-6" /> {/* Bottom spacing */}
       

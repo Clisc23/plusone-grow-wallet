@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useToast } from "@/hooks/use-toast";
+import { profileService, Profile } from "@/services/profileService";
 
 interface User {
   email?: string;
@@ -26,6 +27,7 @@ export const usePrivyAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [userProfile, setUserProfile] = useState<User | null>(null);
+  const [dbProfile, setDbProfile] = useState<Profile | null>(null);
   const { toast } = useToast();
 
   // Get Solana wallet
@@ -54,12 +56,37 @@ export const usePrivyAuth = () => {
 
         // Get wallet balance
         getBalance(publicKey);
+        
+        // Create or get database profile
+        createOrGetProfile(user, solanaWallet.address, twitterAccount);
       }
     } else {
       setUserProfile(null);
       setWallet(null);
+      setDbProfile(null);
     }
   }, [authenticated, user, solanaWallet]);
+
+  const createOrGetProfile = async (user: any, walletAddress: string, twitterAccount: any) => {
+    try {
+      const profile = await profileService.upsertProfile({
+        user_id: user.id,
+        wallet_address: walletAddress,
+        twitter_username: twitterAccount?.username,
+        twitter_name: twitterAccount?.name,
+        profile_image_url: twitterAccount?.profilePictureUrl,
+      });
+      
+      setDbProfile(profile);
+    } catch (error) {
+      console.error("Failed to create/get profile:", error);
+      toast({
+        title: "Profile Error",
+        description: "Failed to sync your profile. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getBalance = async (publicKey: PublicKey) => {
     try {
@@ -147,10 +174,11 @@ export const usePrivyAuth = () => {
     isAuthenticated: authenticated,
     user: userProfile,
     wallet,
+    dbProfile,
     isLoading,
     login: handleLogin,
     logout: handleLogout,
-    getBalance: () => wallet?.balance?.toString() || "0",
+    getBalance: () => dbProfile?.balance?.toString() || wallet?.balance?.toString() || "0",
     sendTransaction,
   };
 };
