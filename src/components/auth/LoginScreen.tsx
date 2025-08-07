@@ -4,9 +4,10 @@ import { Twitter, Wallet, Users, TrendingUp } from "lucide-react";
 
 interface LoginScreenProps {
   onLogin?: () => void;
+  isLoading?: boolean;
 }
 
-export const LoginScreen = ({ onLogin }: LoginScreenProps) => {
+export const LoginScreen = ({ onLogin, isLoading = false }: LoginScreenProps) => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md space-y-6">
@@ -55,11 +56,12 @@ export const LoginScreen = ({ onLogin }: LoginScreenProps) => {
           <CardContent className="space-y-4">
             <Button 
               onClick={onLogin}
+              disabled={isLoading}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               size="lg"
             >
               <Twitter className="w-5 h-5 mr-2" />
-              Continue with Twitter
+              {isLoading ? "Connecting..." : "Continue with Twitter"}
             </Button>
             
             <div className="text-center">
