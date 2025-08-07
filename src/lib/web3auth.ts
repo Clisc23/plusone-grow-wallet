@@ -43,7 +43,7 @@ class Web3AuthService {
 
       web3auth = new Web3Auth({
         clientId,
-        web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+        web3AuthNetwork: WEB3AUTH_NETWORK.TESTNET,
         privateKeyProvider: privateKeyProvider as any,
         uiConfig: {
           appName: "PlusOne Wallet",
