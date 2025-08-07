@@ -3,98 +3,132 @@ import { CHAIN_NAMESPACES, IProvider, WEB3AUTH_NETWORK } from "@web3auth/base";
 import { EthereumPrivateKeyProvider } from "@web3auth/ethereum-provider";
 import Web3 from "web3";
 
-const clientId = "BPi5PB_UiIZ-cPz1GtV5i1I2iOSOHuimiXBI0e-Oe_u6X3oVAbCiAZOTEBtTXw4tsluTITPqA8zMsfxIKMjiqNQ"; // Web3Auth testnet client ID
+// Web3Auth Client ID for testnet (replace with your own for production)
+const clientId = "BPi5PB_UiIZ-cPz1GtV5i1I2iOSOHuimiXBI0e-Oe_u6X3oVAbCiAZOTEBtTXw4tsluTITPqA8zMsfxIKMjiqNQ";
 
 // Linea Mainnet configuration
 const chainConfig = {
   chainNamespace: CHAIN_NAMESPACES.EIP155,
-  chainId: "0xe708", // 59144 in hex (Linea Mainnet)
+  chainId: "0xe708", // 59144 in decimal (Linea Mainnet)
   rpcTarget: "https://rpc.linea.build",
   displayName: "Linea Mainnet",
   blockExplorerUrl: "https://lineascan.build",
   ticker: "ETH",
   tickerName: "Ethereum",
-  logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
+  logo: "https://avatars.githubusercontent.com/u/111895529?s=200&v=4",
 };
 
-const privateKeyProvider = new EthereumPrivateKeyProvider({
-  config: { chainConfig },
-});
+let web3auth: Web3Auth | null = null;
 
-// Initialize the provider with the current chain
-privateKeyProvider.setupProvider(chainConfig.chainId);
-
-const web3auth = new Web3Auth({
-  clientId,
-  web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
-  privateKeyProvider: privateKeyProvider as any, // Type assertion to bypass interface issue
-  uiConfig: {
-    appName: "PlusOne",
-    mode: "dark",
-    loginMethodsOrder: ["twitter"],
-    logoLight: "https://web3auth.io/images/web3authlog.png",
-    logoDark: "https://web3auth.io/images/web3authlogodark.png",
-    defaultLanguage: "en",
-    modalZIndex: "99999",
-  },
-});
-
-export class Web3AuthService {
+class Web3AuthService {
   private web3: Web3 | null = null;
   private provider: IProvider | null = null;
+  private isInitialized = false;
 
-  async init() {
+  async init(): Promise<boolean> {
     try {
+      if (this.isInitialized && web3auth) {
+        return true;
+      }
+
+      console.log("Initializing Web3Auth...");
+
+      // Create private key provider
+      const privateKeyProvider = new EthereumPrivateKeyProvider({
+        config: { chainConfig },
+      });
+
+      // Setup provider with chain
+      await privateKeyProvider.setupProvider(chainConfig.chainId);
+
+      web3auth = new Web3Auth({
+        clientId,
+        web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
+        privateKeyProvider: privateKeyProvider as any,
+        uiConfig: {
+          appName: "PlusOne Wallet",
+          mode: "dark",
+          logoLight: "https://web3auth.io/images/web3authlog.png",
+          logoDark: "https://web3auth.io/images/web3authlogodark.png",
+          defaultLanguage: "en",
+          modalZIndex: "99999",
+          loginMethodsOrder: ["twitter", "google"],
+        },
+      });
+
       await web3auth.init();
+      this.isInitialized = true;
+      
+      console.log("Web3Auth initialized successfully");
       return true;
     } catch (error) {
-      console.error("Failed to initialize Web3Auth:", error);
+      console.error("Web3Auth initialization failed:", error);
       return false;
     }
   }
 
   async login() {
     try {
+      if (!web3auth) {
+        throw new Error("Web3Auth not initialized");
+      }
+
+      console.log("Starting login process...");
+
       const web3authProvider = await web3auth.connect();
       
-      if (web3authProvider) {
-        this.provider = web3authProvider;
-        this.web3 = new Web3(web3authProvider);
-        
-        // Get user info
-        const user = await web3auth.getUserInfo();
-        
-        // Get wallet address
-        const accounts = await this.web3.eth.getAccounts();
-        const address = accounts[0];
-
-        return {
-          success: true,
-          user: {
-            email: user.email,
-            name: user.name,
-            profileImage: user.profileImage,
-            verifierId: user.name || user.email?.split('@')[0] || 'User', // Fallback for verifierId
-          },
-          wallet: {
-            address,
-            provider: web3authProvider,
-          }
-        };
+      if (!web3authProvider) {
+        return { success: false, error: "Failed to connect to Web3Auth" };
       }
-      
-      return { success: false, error: "Failed to connect" };
+
+      this.provider = web3authProvider;
+      this.web3 = new Web3(web3authProvider);
+
+      // Get user info
+      const user = await web3auth.getUserInfo();
+      console.log("User info:", user);
+
+      // Get wallet address
+      const accounts = await this.web3.eth.getAccounts();
+      if (!accounts || accounts.length === 0) {
+        throw new Error("No accounts found");
+      }
+
+      const address = accounts[0];
+      console.log("Wallet address:", address);
+
+      return {
+        success: true,
+        user: {
+          email: user.email,
+          name: user.name,
+          profileImage: user.profileImage,
+          verifierId: user.name || user.email?.split('@')[0] || 'User',
+        },
+        wallet: {
+          address,
+          provider: web3authProvider,
+        }
+      };
     } catch (error: any) {
       console.error("Login failed:", error);
-      return { success: false, error: error.message };
+      return { 
+        success: false, 
+        error: error.message || "Authentication failed" 
+      };
     }
   }
 
   async logout() {
     try {
+      if (!web3auth) {
+        throw new Error("Web3Auth not initialized");
+      }
+
       await web3auth.logout();
       this.provider = null;
       this.web3 = null;
+      
       return { success: true };
     } catch (error: any) {
       console.error("Logout failed:", error);
@@ -102,7 +136,7 @@ export class Web3AuthService {
     }
   }
 
-  async getBalance(address: string) {
+  async getBalance(address: string): Promise<string> {
     if (!this.web3) return "0";
     
     try {
@@ -136,15 +170,15 @@ export class Web3AuthService {
     }
   }
 
-  isConnected() {
-    return web3auth.connected;
+  isConnected(): boolean {
+    return web3auth?.connected || false;
   }
 
-  getProvider() {
+  getProvider(): IProvider | null {
     return this.provider;
   }
 
-  getWeb3() {
+  getWeb3(): Web3 | null {
     return this.web3;
   }
 }

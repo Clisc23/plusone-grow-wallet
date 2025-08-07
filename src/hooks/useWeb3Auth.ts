@@ -24,22 +24,35 @@ export const useWeb3Auth = () => {
 
   useEffect(() => {
     const init = async () => {
+      setIsLoading(true);
       try {
+        console.log("Initializing Web3Auth service...");
         const success = await web3AuthService.init();
         setIsInitialized(success);
         
-        // Check if already connected
-        if (web3AuthService.isConnected()) {
-          setIsAuthenticated(true);
-          // You might want to get user info here if needed
+        if (success) {
+          console.log("Checking if already connected...");
+          // Check if already connected
+          if (web3AuthService.isConnected()) {
+            setIsAuthenticated(true);
+            console.log("User already connected");
+          }
+        } else {
+          toast({
+            title: "Initialization Failed",
+            description: "Please refresh the page and try again",
+            variant: "destructive",
+          });
         }
       } catch (error) {
         console.error("Web3Auth initialization failed:", error);
         toast({
           title: "Initialization Error",
-          description: "Failed to initialize authentication service",
+          description: "Failed to initialize Web3Auth service",
           variant: "destructive",
         });
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -50,7 +63,7 @@ export const useWeb3Auth = () => {
     if (!isInitialized) {
       toast({
         title: "Not Ready",
-        description: "Authentication service is still initializing",
+        description: "Please wait for initialization to complete",
         variant: "destructive",
       });
       return;
@@ -58,6 +71,7 @@ export const useWeb3Auth = () => {
 
     setIsLoading(true);
     try {
+      console.log("Starting login...");
       const result = await web3AuthService.login();
       
       if (result.success) {
@@ -65,18 +79,21 @@ export const useWeb3Auth = () => {
         setUser(result.user);
         setWallet(result.wallet);
         
+        console.log("Login successful:", result);
+        
         toast({
           title: "Welcome to PlusOne! 🎉",
-          description: "You've received 10 free PlusOne tokens!",
+          description: "You've successfully connected your wallet on Linea!",
         });
       } else {
+        console.error("Login failed:", result.error);
         toast({
           title: "Login Failed",
-          description: result.error || "Failed to authenticate",
+          description: result.error || "Failed to authenticate with Web3Auth",
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
       toast({
         title: "Login Error",
@@ -91,20 +108,29 @@ export const useWeb3Auth = () => {
   const logout = async () => {
     setIsLoading(true);
     try {
-      await web3AuthService.logout();
-      setIsAuthenticated(false);
-      setUser(null);
-      setWallet(null);
+      const result = await web3AuthService.logout();
       
-      toast({
-        title: "Logged Out",
-        description: "You have been successfully logged out",
-      });
-    } catch (error) {
+      if (result.success) {
+        setIsAuthenticated(false);
+        setUser(null);
+        setWallet(null);
+        
+        toast({
+          title: "Logged Out",
+          description: "You have been successfully logged out",
+        });
+      } else {
+        toast({
+          title: "Logout Error",
+          description: result.error || "Failed to logout properly",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
       console.error("Logout error:", error);
       toast({
         title: "Logout Error",
-        description: "Failed to logout properly",
+        description: "An unexpected error occurred during logout",
         variant: "destructive",
       });
     } finally {
@@ -112,7 +138,7 @@ export const useWeb3Auth = () => {
     }
   };
 
-  const getBalance = async () => {
+  const getBalance = async (): Promise<string> => {
     if (!wallet?.address) return "0";
     return await web3AuthService.getBalance(wallet.address);
   };
