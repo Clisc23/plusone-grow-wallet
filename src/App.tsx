@@ -12,7 +12,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <PrivyProvider 
-      appId="clyuhz0av0ai8pqrxlwkt52i3"
+      appId="cm04fvjoa012aih0e3xk39pzp"
       config={{
         loginMethods: ['twitter'],
         appearance: {
