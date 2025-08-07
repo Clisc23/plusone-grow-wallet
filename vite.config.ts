@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     nodePolyfills({
-      include: ['events', 'buffer', 'crypto', 'stream', 'util', 'url', 'http', 'https', 'zlib'],
+      include: ['events', 'buffer', 'crypto', 'stream', 'util', 'url', 'http', 'https', 'zlib', 'assert', 'path', 'os'],
       globals: {
         Buffer: true,
         global: true,
