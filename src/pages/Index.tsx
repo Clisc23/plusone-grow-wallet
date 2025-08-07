@@ -4,7 +4,7 @@ import { WalletHeader } from "@/components/wallet/WalletHeader";
 import { WalletBalance } from "@/components/wallet/WalletBalance";
 import { ReferralCard } from "@/components/referral/ReferralCard";
 import { TransactionHistory } from "@/components/transactions/TransactionHistory";
-import { useWeb3Auth } from "@/hooks/useWeb3Auth";
+import { usePrivyAuth } from "@/hooks/usePrivyAuth";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
@@ -15,7 +15,7 @@ const Index = () => {
     isLoading, 
     login, 
     logout 
-  } = useWeb3Auth();
+  } = usePrivyAuth();
   const { toast } = useToast();
   
   const [userProfile, setUserProfile] = useState({
@@ -68,7 +68,7 @@ const Index = () => {
       />
       
       <WalletBalance 
-        balance={userProfile.balance}
+        balance={wallet?.balance || 0}
         onSend={handleSend}
         onReceive={handleReceive}
         onAddFunds={handleAddFunds}
