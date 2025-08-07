@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     include: ['bn.js', 'events', 'crypto-js'],
-    exclude: ['@web3auth/ethereum-provider'],
+    exclude: ['@web3auth/ethereum-provider', '@toruslabs/starkware-crypto'],
     esbuildOptions: {
       target: 'esnext',
     },
