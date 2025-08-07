@@ -23,7 +23,7 @@ export const WalletBalance = ({
           <h2 className="text-4xl font-bold text-foreground mb-1">
             {balance.toLocaleString()}
           </h2>
-          <p className="text-lg text-primary font-semibold">SOL</p>
+          <p className="text-lg text-primary font-semibold">PlusOne Tokens</p>
         </div>
         
         <div className="flex gap-3">
